@@ -21,6 +21,8 @@ export default function HomeScreen() {
 
   const { data: expenses, loading: expensesLoading, refetch: refetchExpenses } = useApi<Expense[]>(
     user ? `/api/expenses/${user.id}` : ''
+  );
+
   useEffect(() => {
     if (user && expenses && expenses.length > 0) {
       fetchAiInsights();
