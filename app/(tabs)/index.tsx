@@ -21,12 +21,6 @@ export default function HomeScreen() {
 
   const { data: expenses, loading: expensesLoading, refetch: refetchExpenses } = useApi<Expense[]>(
     user ? `/api/expenses/${user.id}` : ''
-  );
-
-  const { data: goals, loading: goalsLoading, refetch: refetchGoals } = useApi<Goal[]>(
-    user ? `/api/goals/${user.id}` : ''
-  );
-
   useEffect(() => {
     if (user && expenses && expenses.length > 0) {
       fetchAiInsights();
@@ -68,10 +62,6 @@ export default function HomeScreen() {
   const totalExpenses = expenses?.reduce((sum, expense) => sum + expense.amount, 0) || 0;
   const activeGoals = goals?.filter(goal => goal.status === 'active') || [];
   const completedGoals = goals?.filter(goal => goal.status === 'completed') || [];
-
-  if (!isAuthenticated) {
-    return null;
-  }
 
   return (
     <ScrollView

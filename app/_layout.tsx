@@ -1,10 +1,8 @@
 import { useEffect } from 'react';
 import { Stack } from 'expo-router';
-import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
-import { useAuth } from '@/hooks/useAuth';
 import { useFonts } from 'expo-font';
 import {
   Inter_400Regular,
@@ -21,7 +19,6 @@ import {
 
 export default function RootLayout() {
   useFrameworkReady();
-  const { isAuthenticated, authLoading } = useAuth();
 
   const [fontsLoaded] = useFonts({
     'Inter-Regular': Inter_400Regular,
@@ -51,22 +48,14 @@ export default function RootLayout() {
     }
   }, []);
 
-  useEffect(() => {
-    // Handle initial navigation after auth state is loaded
-    if (!authLoading && fontsLoaded) {
-      if (!isAuthenticated) {
-        router.replace('/auth');
-      }
-    }
-  }, [isAuthenticated, authLoading, fontsLoaded]);
-
-  if (!fontsLoaded || authLoading) {
+  if (!fontsLoaded) {
     return null;
   }
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" />
         <Stack.Screen name="auth" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="+not-found" />
