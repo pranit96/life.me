@@ -23,6 +23,10 @@ export default function HomeScreen() {
     user ? `/api/expenses/${user.id}` : ''
   );
 
+  const { data: goals, loading: goalsLoading, refetch: refetchGoals } = useApi<Goal[]>(
+    user ? `/api/goals/${user.id}` : ''
+  );
+
   useEffect(() => {
     if (user && expenses && expenses.length > 0) {
       fetchAiInsights();
