@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl, ActivityIndicator } from 'react-native';
-import { router } from 'expo-router';
+import { Redirect } from 'expo-router';
 import { Card } from '@/components/ui/Card';
 import { AnimatedView, FadeInView } from '@/components/ui/AnimatedView';
 import { ExpenseCard } from '@/components/ExpenseCard';
@@ -14,7 +14,7 @@ import { Expense, Goal } from '@/types';
 export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [aiInsights, setAiInsights] = useState<string>('');
-  
+
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme];
   const { user, isAuthenticated, authLoading } = useAuth();
@@ -26,12 +26,6 @@ export default function HomeScreen() {
   const { data: goals, loading: goalsLoading, refetch: refetchGoals } = useApi<Goal[]>(
     user ? `/api/goals/${user.id}` : ''
   );
-
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.replace('/auth');
-    }
-  }, [isAuthenticated, authLoading]);
 
   useEffect(() => {
     if (user && expenses && expenses.length > 0) {
@@ -63,84 +57,59 @@ export default function HomeScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await Promise.all([
-      refetchExpenses(),
-      refetchGoals(),
-      fetchAiInsights(),
-    ]);
+    await Promise.all([refetchExpenses(), refetchGoals(), fetchAiInsights()]);
     setRefreshing(false);
   };
 
   const totalExpenses = expenses?.reduce((sum, expense) => sum + expense.amount, 0) || 0;
-  const activeGoals = goals?.filter(goal => goal.status === 'active') || [];
-  const completedGoals = goals?.filter(goal => goal.status === 'completed') || [];
+  const activeGoals = goals?.filter((goal) => goal.status === 'active') || [];
+  const completedGoals = goals?.filter((goal) => goal.status === 'completed') || [];
 
   if (authLoading) {
     return (
       <View style={[styles.container, styles.centered, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
-          Loading...
-        </Text>
+        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading...</Text>
       </View>
     );
   }
 
+  // ✅ Use declarative <Redirect /> instead of router.replace in useEffect
   if (!isAuthenticated) {
-    return null;
+    return <Redirect href="/auth" />;
   }
 
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: colors.background }]}
       refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          tintColor={colors.primary}
-        />
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
       }
     >
       <AnimatedView style={styles.header} type="fade">
-        <Text style={[styles.greeting, { color: colors.textSecondary }]}>
-          Welcome back,
-        </Text>
-        <Text style={[styles.username, { color: colors.text }]}>
-          {user?.firstName || user?.username || 'User'}
-        </Text>
+        <Text style={[styles.greeting, { color: colors.textSecondary }]}>Welcome back,</Text>
+        <Text style={[styles.username, { color: colors.text }]}>{user?.firstName || user?.username || 'User'}</Text>
       </AnimatedView>
 
       <View style={styles.statsContainer}>
         <AnimatedView delay={200} type="slide">
           <Card style={styles.statCard}>
-            <Text style={[styles.statValue, { color: colors.primary }]}>
-              ${totalExpenses.toFixed(2)}
-            </Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-              Total Expenses
-            </Text>
+            <Text style={[styles.statValue, { color: colors.primary }]}>${totalExpenses.toFixed(2)}</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Total Expenses</Text>
           </Card>
         </AnimatedView>
 
         <AnimatedView delay={300} type="slide">
           <Card style={styles.statCard}>
-            <Text style={[styles.statValue, { color: colors.success }]}>
-              {activeGoals.length}
-            </Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-              Active Goals
-            </Text>
+            <Text style={[styles.statValue, { color: colors.success }]}>{activeGoals.length}</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Active Goals</Text>
           </Card>
         </AnimatedView>
 
         <AnimatedView delay={400} type="slide">
           <Card style={styles.statCard}>
-            <Text style={[styles.statValue, { color: colors.accent }]}>
-              {completedGoals.length}
-            </Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-              Completed
-            </Text>
+            <Text style={[styles.statValue, { color: colors.accent }]}>{completedGoals.length}</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Completed</Text>
           </Card>
         </AnimatedView>
       </View>
@@ -155,13 +124,9 @@ export default function HomeScreen() {
       )}
 
       <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>
-          Active Goals
-        </Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Active Goals</Text>
         {goalsLoading ? (
-          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
-            Loading goals...
-          </Text>
+          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading goals...</Text>
         ) : activeGoals.length > 0 ? (
           <FadeInView>
             {activeGoals.slice(0, 2).map((goal, index) => (
@@ -176,13 +141,9 @@ export default function HomeScreen() {
       </View>
 
       <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>
-          Recent Expenses
-        </Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Recent Expenses</Text>
         {expensesLoading ? (
-          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
-            Loading expenses...
-          </Text>
+          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading expenses...</Text>
         ) : expenses && expenses.length > 0 ? (
           <FadeInView>
             {expenses.slice(0, 5).map((expense, index) => (
