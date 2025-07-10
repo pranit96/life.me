@@ -1,18 +1,25 @@
 {
-  "name": "bolt-expo-starter",
+  "name": "life-me",
   "main": "expo-router/entry",
   "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "EXPO_NO_TELEMETRY=1 expo start",
+    "web": "EXPO_NO_TELEMETRY=1 expo start --web",
+    "build": "expo export --platform web",
     "build:web": "expo export --platform web",
-    "vercel-build": "next build",
-    "lint": "expo lint"
+    "vercel-build": "expo export --platform web",
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "lint": "expo lint",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.1",
     "@expo-google-fonts/poppins": "^0.4.0",
     "@expo/vector-icons": "^14.1.0",
+    "@expo/webpack-config": "^19.0.1",
     "@lucide/lab": "^0.1.2",
     "@neondatabase/serverless": "^1.0.1",
     "@react-native-async-storage/async-storage": "^2.2.0",
@@ -35,7 +42,7 @@
     "lucide-react-native": "^0.475.0",
     "next": "^14.2.0",
     "react": "19.0.0",
-    "react-dom": "19.0.0",
+    "react-dom": "^19.0.0",
     "react-native": "0.79.1",
     "react-native-gesture-handler": "~2.24.0",
     "react-native-reanimated": "~3.17.4",
@@ -50,5 +57,8 @@
     "@babel/core": "^7.25.2",
     "@types/react": "~19.0.10",
     "typescript": "~5.8.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
