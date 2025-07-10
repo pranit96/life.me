@@ -20,12 +20,6 @@ export default function AuthScreen() {
   const colors = Colors[colorScheme];
   const { login, isAuthenticated, authLoading } = useAuth();
 
-  useEffect(() => {
-    if (isAuthenticated && !authLoading) {
-      router.replace('/(tabs)');
-    }
-  }, [isAuthenticated, authLoading]);
-
   const handleLogin = async () => {
     if (!telegramId.trim()) {
       setError('Please enter your Telegram ID');
