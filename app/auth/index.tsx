@@ -43,7 +43,7 @@ export default function AuthScreen() {
       });
 
       if (result.success) {
-        router.replace('/(tabs)');
+        router.replace('/(tabs)/index');
       } else {
         setError(result.error || 'Login failed. Please try again.');
       }
