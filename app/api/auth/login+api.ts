@@ -1,23 +1,17 @@
+import { NextRequest, NextResponse } from 'next/server';
 import { DatabaseService } from '@/utils/database';
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { telegramId, username, firstName, lastName } = body;
-    
+
     if (!telegramId) {
-      return new Response(JSON.stringify({ error: 'Telegram ID is required' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return NextResponse.json({ error: 'Telegram ID is required' }, { status: 400 });
     }
 
-    // Validate telegramId is numeric
     if (!/^\d+$/.test(telegramId)) {
-      return new Response(JSON.stringify({ error: 'Invalid Telegram ID format' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return NextResponse.json({ error: 'Invalid Telegram ID format' }, { status: 400 });
     }
 
     const user = await DatabaseService.createUser(telegramId, {
@@ -26,12 +20,16 @@ export async function POST(request: Request) {
       lastName,
     });
 
-    return Response.json(user);
+    return NextResponse.json(user);
   } catch (error) {
     console.error('Login error:', error);
-    return new Response(JSON.stringify({ error: 'Login failed. Please try again.' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return NextResponse.json(
+      { error: 'Login failed. Please try again.' },
+      { status: 500 }
+    );
   }
+}
+
+export function GET() {
+  return NextResponse.json({ error: 'Use POST' }, { status: 405 });
 }
