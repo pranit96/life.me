@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, RefreshControl, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import { Card } from '@/components/ui/Card';
 import { AnimatedView, FadeInView } from '@/components/ui/AnimatedView';
@@ -17,7 +17,7 @@ export default function HomeScreen() {
   
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme];
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, authLoading } = useAuth();
 
   const { data: expenses, loading: expensesLoading, refetch: refetchExpenses } = useApi<Expense[]>(
     user ? `/api/expenses/${user.id}` : ''
@@ -26,6 +26,12 @@ export default function HomeScreen() {
   const { data: goals, loading: goalsLoading, refetch: refetchGoals } = useApi<Goal[]>(
     user ? `/api/goals/${user.id}` : ''
   );
+
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.replace('/auth');
+    }
+  }, [isAuthenticated, authLoading]);
 
   useEffect(() => {
     if (user && expenses && expenses.length > 0) {
@@ -68,6 +74,21 @@ export default function HomeScreen() {
   const totalExpenses = expenses?.reduce((sum, expense) => sum + expense.amount, 0) || 0;
   const activeGoals = goals?.filter(goal => goal.status === 'active') || [];
   const completedGoals = goals?.filter(goal => goal.status === 'completed') || [];
+
+  if (authLoading) {
+    return (
+      <View style={[styles.container, styles.centered, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+          Loading...
+        </Text>
+      </View>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <ScrollView
@@ -182,6 +203,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
+  },
+  centered: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   header: {
     marginBottom: 24,

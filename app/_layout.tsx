@@ -33,19 +33,34 @@ export default function RootLayout() {
 
   useEffect(() => {
     // Initialize database tables only if environment is configured
-    if (process.env.EXPO_PUBLIC_NEON_DATABASE_URL && process.env.EXPO_PUBLIC_NEON_DATABASE_URL !== 'your_neon_database_url_here') {
-      fetch('/api/database/init', { method: 'POST' })
-        .then(response => {
+    const initDatabase = async () => {
+      try {
+        if (process.env.EXPO_PUBLIC_NEON_DATABASE_URL && 
+            process.env.EXPO_PUBLIC_NEON_DATABASE_URL !== 'your_neon_database_url_here') {
+          const response = await fetch('/api/database/init', { 
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+          
           if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            const errorText = await response.text();
+            console.error('Database init failed:', response.status, errorText);
+            return;
           }
-          return response.json();
-        })
-        .then(data => console.log('Database initialized:', data))
-        .catch(error => console.error('Database init error:', error));
-    } else {
-      console.warn('Database URL not configured. Please set EXPO_PUBLIC_NEON_DATABASE_URL in your .env file.');
-    }
+          
+          const data = await response.json();
+          console.log('Database initialized:', data);
+        } else {
+          console.warn('Database URL not configured. Please set EXPO_PUBLIC_NEON_DATABASE_URL in your .env file.');
+        }
+      } catch (error) {
+        console.error('Database init error:', error);
+      }
+    };
+
+    initDatabase();
   }, []);
 
   if (!fontsLoaded) {
@@ -56,7 +71,7 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
-        <Stack.Screen name="auth" />
+        <Stack.Screen name="auth/index" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="+not-found" />
       </Stack>

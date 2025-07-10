@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -14,36 +14,57 @@ export default function AuthScreen() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme];
-  const { login } = useAuth();
+  const { login, isAuthenticated, authLoading } = useAuth();
+
+  useEffect(() => {
+    if (isAuthenticated && !authLoading) {
+      router.replace('/(tabs)');
+    }
+  }, [isAuthenticated, authLoading]);
 
   const handleLogin = async () => {
     if (!telegramId.trim()) {
-      Alert.alert('Error', 'Please enter your Telegram ID');
+      setError('Please enter your Telegram ID');
       return;
     }
 
     setLoading(true);
+    setError(null);
+    
     try {
       const result = await login(telegramId, {
-        username,
-        firstName,
-        lastName,
+        username: username.trim() || undefined,
+        firstName: firstName.trim() || undefined,
+        lastName: lastName.trim() || undefined,
       });
 
       if (result.success) {
         router.replace('/(tabs)');
       } else {
-        Alert.alert('Login Failed', result.error || 'Please try again');
+        setError(result.error || 'Login failed. Please try again.');
       }
     } catch (error) {
-      Alert.alert('Error', 'Network error. Please try again.');
+      console.error('Login error:', error);
+      setError('Network error. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }
   };
+
+  if (authLoading) {
+    return (
+      <View style={[styles.container, styles.centered, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+          Loading...
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -65,6 +86,14 @@ export default function AuthScreen() {
             Connect with Telegram
           </Text>
           
+          {error && (
+            <View style={[styles.errorContainer, { backgroundColor: colors.error + '20' }]}>
+              <Text style={[styles.errorText, { color: colors.error }]}>
+                {error}
+              </Text>
+            </View>
+          )}
+          
           <View style={styles.inputContainer}>
             <Text style={[styles.label, { color: colors.text }]}>
               Telegram ID *
@@ -74,15 +103,19 @@ export default function AuthScreen() {
                 styles.input,
                 {
                   backgroundColor: colors.background,
-                  borderColor: colors.border,
+                  borderColor: error && !telegramId.trim() ? colors.error : colors.border,
                   color: colors.text,
                 },
               ]}
               value={telegramId}
-              onChangeText={setTelegramId}
+              onChangeText={(text) => {
+                setTelegramId(text);
+                if (error) setError(null);
+              }}
               placeholder="Enter your Telegram ID"
               placeholderTextColor={colors.textSecondary}
               keyboardType="numeric"
+              editable={!loading}
             />
           </View>
 
@@ -103,6 +136,7 @@ export default function AuthScreen() {
               onChangeText={setUsername}
               placeholder="@username"
               placeholderTextColor={colors.textSecondary}
+              editable={!loading}
             />
           </View>
 
@@ -124,6 +158,7 @@ export default function AuthScreen() {
                 onChangeText={setFirstName}
                 placeholder="John"
                 placeholderTextColor={colors.textSecondary}
+                editable={!loading}
               />
             </View>
 
@@ -144,6 +179,7 @@ export default function AuthScreen() {
                 onChangeText={setLastName}
                 placeholder="Doe"
                 placeholderTextColor={colors.textSecondary}
+                editable={!loading}
               />
             </View>
           </View>
@@ -151,7 +187,7 @@ export default function AuthScreen() {
           <Button
             title={loading ? 'Connecting...' : 'Connect & Continue'}
             onPress={handleLogin}
-            disabled={loading}
+            disabled={loading || !telegramId.trim()}
             size="large"
             style={styles.loginButton}
           />
@@ -169,7 +205,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
+  },
+  centered: {
     justifyContent: 'center',
+    alignItems: 'center',
   },
   content: {
     flex: 1,
@@ -206,6 +245,16 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     textAlign: 'center',
   },
+  errorContainer: {
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  errorText: {
+    fontSize: 14,
+    fontFamily: 'Inter-Medium',
+    textAlign: 'center',
+  },
   inputContainer: {
     marginBottom: 16,
   },
@@ -237,5 +286,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: 'Inter-Regular',
     lineHeight: 16,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    fontFamily: 'Inter-Regular',
   },
 });

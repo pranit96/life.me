@@ -14,7 +14,8 @@ export function useAuth() {
     try {
       const userData = await AsyncStorage.getItem('user');
       if (userData) {
-        setUser(JSON.parse(userData));
+        const parsedUser = JSON.parse(userData);
+        setUser(parsedUser);
       }
     } catch (error) {
       console.error('Failed to load user:', error);
@@ -42,11 +43,12 @@ export function useAuth() {
         await AsyncStorage.setItem('user', JSON.stringify(user));
         return { success: true, user };
       } else {
-        const error = await response.text();
-        return { success: false, error };
+        const errorData = await response.json().catch(() => ({ error: 'Login failed' }));
+        return { success: false, error: errorData.error || 'Login failed' };
       }
     } catch (error) {
-      return { success: false, error: 'Network error' };
+      console.error('Login network error:', error);
+      return { success: false, error: 'Network error. Please check your connection.' };
     }
   };
 

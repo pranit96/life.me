@@ -9,7 +9,8 @@ export async function executeQuery(query: string, params: any[] = []) {
     });
 
     if (!response.ok) {
-      throw new Error(`Database query failed: ${response.status}`);
+      const errorText = await response.text();
+      throw new Error(`Database query failed: ${response.status} - ${errorText}`);
     }
 
     return await response.json();
@@ -38,14 +39,24 @@ export const DatabaseService = {
       userData.lastName || null,
     ];
 
-    const result = await executeQuery(query, params);
-    return result.rows[0];
+    try {
+      const result = await executeQuery(query, params);
+      return result.rows[0];
+    } catch (error) {
+      console.error('Create user error:', error);
+      throw new Error('Failed to create user');
+    }
   },
 
   async getUser(telegramId: string) {
     const query = 'SELECT * FROM users WHERE telegram_id = $1';
-    const result = await executeQuery(query, [telegramId]);
-    return result.rows[0];
+    try {
+      const result = await executeQuery(query, [telegramId]);
+      return result.rows[0];
+    } catch (error) {
+      console.error('Get user error:', error);
+      throw new Error('Failed to get user');
+    }
   },
 
   async getUserExpenses(userId: string, limit = 50) {
@@ -55,8 +66,13 @@ export const DatabaseService = {
       ORDER BY date DESC, created_at DESC 
       LIMIT $2
     `;
-    const result = await executeQuery(query, [userId, limit]);
-    return result.rows;
+    try {
+      const result = await executeQuery(query, [userId, limit]);
+      return result.rows;
+    } catch (error) {
+      console.error('Get user expenses error:', error);
+      throw new Error('Failed to get expenses');
+    }
   },
 
   async addExpense(userId: string, expense: any) {
@@ -74,8 +90,13 @@ export const DatabaseService = {
       expense.date,
     ];
 
-    const result = await executeQuery(query, params);
-    return result.rows[0];
+    try {
+      const result = await executeQuery(query, params);
+      return result.rows[0];
+    } catch (error) {
+      console.error('Add expense error:', error);
+      throw new Error('Failed to add expense');
+    }
   },
 
   async getUserGoals(userId: string) {
@@ -84,8 +105,13 @@ export const DatabaseService = {
       WHERE user_id = $1 
       ORDER BY created_at DESC
     `;
-    const result = await executeQuery(query, [userId]);
-    return result.rows;
+    try {
+      const result = await executeQuery(query, [userId]);
+      return result.rows;
+    } catch (error) {
+      console.error('Get user goals error:', error);
+      throw new Error('Failed to get goals');
+    }
   },
 
   async createGoal(userId: string, goal: any) {
@@ -106,8 +132,13 @@ export const DatabaseService = {
       goal.status || 'active',
     ];
 
-    const result = await executeQuery(query, params);
-    return result.rows[0];
+    try {
+      const result = await executeQuery(query, params);
+      return result.rows[0];
+    } catch (error) {
+      console.error('Create goal error:', error);
+      throw new Error('Failed to create goal');
+    }
   },
 
   async updateGoal(goalId: string, updates: any) {
@@ -123,7 +154,13 @@ export const DatabaseService = {
     `;
     
     const params = [goalId, ...Object.values(updates)];
-    const result = await executeQuery(query, params);
-    return result.rows[0];
+    
+    try {
+      const result = await executeQuery(query, params);
+      return result.rows[0];
+    } catch (error) {
+      console.error('Update goal error:', error);
+      throw new Error('Failed to update goal');
+    }
   },
 };
