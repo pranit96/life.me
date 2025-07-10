@@ -28,12 +28,6 @@ export default function HomeScreen() {
   );
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.replace('/auth');
-    }
-  }, [isAuthenticated]);
-
-  useEffect(() => {
     if (user && expenses && expenses.length > 0) {
       fetchAiInsights();
     }

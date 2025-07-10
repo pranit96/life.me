@@ -1,8 +1,10 @@
 import { useEffect } from 'react';
 import { Stack } from 'expo-router';
+import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
+import { useAuth } from '@/hooks/useAuth';
 import { useFonts } from 'expo-font';
 import {
   Inter_400Regular,
@@ -19,6 +21,7 @@ import {
 
 export default function RootLayout() {
   useFrameworkReady();
+  const { isAuthenticated, authLoading } = useAuth();
 
   const [fontsLoaded] = useFonts({
     'Inter-Regular': Inter_400Regular,
@@ -32,14 +35,32 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    // Initialize database tables
-    fetch('/api/database/init', { method: 'POST' })
-      .then(response => response.json())
-      .then(data => console.log('Database initialized:', data))
-      .catch(error => console.error('Database init error:', error));
+    // Initialize database tables only if environment is configured
+    if (process.env.EXPO_PUBLIC_NEON_DATABASE_URL && process.env.EXPO_PUBLIC_NEON_DATABASE_URL !== 'your_neon_database_url_here') {
+      fetch('/api/database/init', { method: 'POST' })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => console.log('Database initialized:', data))
+        .catch(error => console.error('Database init error:', error));
+    } else {
+      console.warn('Database URL not configured. Please set EXPO_PUBLIC_NEON_DATABASE_URL in your .env file.');
+    }
   }, []);
 
-  if (!fontsLoaded) {
+  useEffect(() => {
+    // Handle initial navigation after auth state is loaded
+    if (!authLoading && fontsLoaded) {
+      if (!isAuthenticated) {
+        router.replace('/auth');
+      }
+    }
+  }, [isAuthenticated, authLoading, fontsLoaded]);
+
+  if (!fontsLoaded || authLoading) {
     return null;
   }
 
